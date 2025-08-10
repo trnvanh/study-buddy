@@ -1,57 +1,84 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
-
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator } from 'react-native';
 import { useBuddy } from '../../context/buddy-context';
+import { Pet } from '../../types/pet';
 import { useRouter } from 'expo-router';
 
-
 const screenWidth = Dimensions.get('window').width;
-const circleSize = (screenWidth - 100) / 3; // 3 per row, with padding
-
-const buddies = [
-  { id: 1, name: 'Shiba', image: require('../../assets/images/shiba.png') },
-  { id: 2, name: 'Husky', image: require('../../assets/images/husky.png') },
-  { id: 3, name: 'Shiba2', image: require('../../assets/images/shiba2.png') },
-  { id: 4, name: 'Shiba3', image: require('../../assets/images/shiba3.jpg') },
-];
+const circleSize = (screenWidth - 100) / 3;
 
 export default function BuddyScreen() {
   const { selectedBuddy, setSelectedBuddy } = useBuddy();
   const router = useRouter();
 
-  const displayBuddy = selectedBuddy || buddies[0]; // this one needs to be fixed later after saving the data somewhere else
+  const [buddies, setBuddies] = useState<Pet[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch from backend
+  useEffect(() => {
+    console.log("Fetching buddies...");
+    const fetchBuddies = async () => {
+      try {
+        const res = await fetch('http://localhost:8080/api/pets'); 
+        console.log("Status:", res.status);
+        const data = await res.json();
+        console.log("Data:", data);
+        const unlockedBuddies = data.filter((pet: Pet) => pet.unlocked);
+        setBuddies(unlockedBuddies);
+      } catch (error) {
+        console.error('Failed to fetch pets:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBuddies();
+  }, []);
+
+  const displayBuddy = selectedBuddy;
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#A87676" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Choose your buddy</Text>
 
-        {/* Big selected buddy */}
-        <View style={styles.bigCircle}>
-          <Image source={displayBuddy.image} style={styles.bigImage} />
-          <Text style={styles.buddyName}>{displayBuddy.name}</Text>
-        </View>
+        {displayBuddy && (
+          <View style={styles.bigCircle}>
+            <Image source={{ uri: displayBuddy.imageUrl }} style={styles.bigImage} />
+            <Text style={styles.buddyName}>{displayBuddy.name}</Text>
+          </View>
+        )}
 
-        {/* Buddy Grid */}
         <View style={styles.buddyGrid}>
           {buddies.map((buddy) => (
             <TouchableOpacity
               key={buddy.id}
               style={[
                 styles.buddyCircle,
-                displayBuddy.id === buddy.id && styles.selectedBorder,
+                displayBuddy?.id === buddy.id && styles.selectedBorder,
               ]}
               onPress={() => setSelectedBuddy(buddy)}
             >
-              <Image source={buddy.image} style={styles.buddyImage} />
+              <Image source={{ uri: buddy.imageUrl }} style={styles.buddyImage} />
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
-      <TouchableOpacity style={styles.startButton} onPress={() => {
-        if (selectedBuddy) router.push('/pomodoro'); // adjust route if needed
-      }}>
+      <TouchableOpacity
+        style={styles.startButton}
+        onPress={() => {
+          if (selectedBuddy) router.push('/pomodoro');
+        }}
+      >
         <Text style={styles.startText}>Start</Text>
       </TouchableOpacity>
     </View>

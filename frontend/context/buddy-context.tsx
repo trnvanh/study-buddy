@@ -1,20 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-type Buddy = {
-  id: number;
-  name: string;
-  image: any; 
-};
+import { Pet } from '../types/pet'; 
 
 type BuddyContextType = {
-  selectedBuddy: Buddy | null;
-  setSelectedBuddy: (buddy: Buddy) => void;
+  selectedBuddy: Pet | null;
+  setSelectedBuddy: (buddy: Pet) => void;
 };
 
 const BuddyContext = createContext<BuddyContextType | undefined>(undefined);
 
 export const BuddyProvider = ({ children }: { children: ReactNode }) => {
-  const [selectedBuddy, setSelectedBuddy] = useState<Buddy | null>(null);
+  const [selectedBuddy, setSelectedBuddy] = useState<Pet | null>(null);
 
   return (
     <BuddyContext.Provider value={{ selectedBuddy, setSelectedBuddy }}>
