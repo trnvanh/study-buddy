@@ -1,0 +1,17 @@
+server: 
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://dpg-d29pjbfgi27c73amouig-a.frankfurt-postgres.render.com:5432/petapp
+    username: petapp_user
+    password: 8mJAByyWEWCCbUGOrMNErQhVJugyUIV2
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update   
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
