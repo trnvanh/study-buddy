@@ -1,53 +1,93 @@
-// app/(tabs)/scheduling.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Modal, Alert,
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
-const initialTasks = {
-  'Mon 16 Sep': [
-    { id: 1, time: '9 am - 10 am', title: 'Organic Chemistry HW', due: '18 Sep at 23:59', done: false },
-    { id: 2, time: '12 am - 1 am', title: 'Report Software course', due: '24 Sep at 23:59', done: false },
-    { id: 3, time: '6 pm - 10 pm', title: 'Matrix Analysis HW', due: '20 Sep at 23:59', done: false },
-  ],
-  'Tue 17 Sep': [
-    { id: 4, time: '8 am - 10 am', title: 'Organic Chemistry HW', due: '18 Sep at 23:59', done: false },
-    { id: 5, time: '12 am - 1 am', title: 'Report Software course', due: '24 Sep at 23:59', done: false },
-    { id: 6, time: '8 pm - 10 pm', title: 'Matrix Analysis HW', due: '20 Sep at 23:59', done: false },
-  ],
+type Task = {
+  id: number;
+  title: string;
+  time: string;
+  due: string;
+  done: boolean;
+  day: string;
 };
 
 export default function SchedulingScreen() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState<{ [day: string]: Task[] }>({});
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentDay, setCurrentDay] = useState('Mon 16 Sep');
-  const [newTask, setNewTask] = useState({ title: '', time: '', due: '' });
+  const [currentDay, setCurrentDay] = useState('');
+  const [newTask, setNewTask] = useState({ title: '', time: '', due: '', day: '' });
+  const [loading, setLoading] = useState(true);
 
-  const toggleDone = (day: string, id: number) => {
-    setTasks(prev => ({
-      ...prev,
-      [day]: prev[day].map(t => t.id === id ? { ...t, done: !t.done } : t),
-    }));
+  // Fetch tasks from backend
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await fetch('http://10.0.2.2:8080/api/tasks');
+        const data: Task[] = await res.json();
+
+        // Group tasks by day
+        const grouped: { [day: string]: Task[] } = {};
+        data.forEach((task) => {
+          if (!grouped[task.day]) grouped[task.day] = [];
+          grouped[task.day].push(task);
+        });
+
+        setTasks(grouped);
+      } catch (error) {
+        console.error('Failed to fetch tasks:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  const toggleDone = async (day: string, id: number) => {
+    try {
+      await fetch(`http://10.0.2.2:8080/api/tasks/${id}/toggle`, {
+        method: 'PUT',
+      });
+
+      setTasks(prev => ({
+        ...prev,
+        [day]: prev[day].map(t => t.id === id ? { ...t, done: !t.done } : t),
+      }));
+    } catch (error) {
+      console.error('Failed to toggle task:', error);
+    }
   };
 
-  const handleAddTask = () => {
-    if (!newTask.title || !newTask.time || !newTask.due) {
+  const handleAddTask = async () => {
+    if (!newTask.title || !newTask.time || !newTask.due || !currentDay) {
       Alert.alert('Fill all fields');
       return;
     }
-    setTasks(prev => ({
-      ...prev,
-      [currentDay]: [
-        ...(prev[currentDay] || []),
-        { id: Date.now(), title: newTask.title, time: newTask.time, due: newTask.due, done: false },
-      ],
-    }));
-    setNewTask({ title: '', time: '', due: '' });
-    setModalVisible(false);
+
+    try {
+      const res = await fetch('http://10.0.2.2:8080/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...newTask, day: currentDay, done: false }),
+      });
+
+      const savedTask: Task = await res.json();
+
+      setTasks(prev => ({
+        ...prev,
+        [currentDay]: [...(prev[currentDay] || []), savedTask],
+      }));
+
+      setNewTask({ title: '', time: '', due: '', day: '' });
+      setModalVisible(false);
+    } catch (error) {
+      console.error('Failed to add task:', error);
+    }
   };
 
-  const renderTask = (day: string, task: any) => {
+  const renderTask = (day: string, task: Task) => {
     const dueColor = task.due.includes('18') ? '#ff5f5f' : '#ffd15c';
 
     return (
@@ -69,16 +109,17 @@ export default function SchedulingScreen() {
     );
   };
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading tasks...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Scheduling</Text>
-
-      {/* Week Selector */}
-      <View style={styles.weekRow}>
-        <Text style={styles.weekLabel}>Week</Text>
-        <TextInput style={styles.weekInput} placeholder="16 Sep" />
-        <Ionicons name="calendar-outline" size={20} color="#444" style={{ marginLeft: 8 }} />
-      </View>
 
       <FlatList
         data={Object.keys(tasks)}
@@ -86,11 +127,14 @@ export default function SchedulingScreen() {
         renderItem={({ item: day }) => (
           <View>
             <Text style={styles.dayHeader}>{day}</Text>
-            {tasks[day].map(task => renderTask(day, task))}
-            <TouchableOpacity style={styles.addTaskBtn} onPress={() => {
-              setCurrentDay(day);
-              setModalVisible(true);
-            }}>
+            {tasks[day]?.map(task => renderTask(day, task))}
+            <TouchableOpacity
+              style={styles.addTaskBtn}
+              onPress={() => {
+                setCurrentDay(day);
+                setModalVisible(true);
+              }}
+            >
               <Text style={styles.plus}>＋</Text>
             </TouchableOpacity>
           </View>
@@ -125,28 +169,8 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 20,
   },
-  title: {
-    fontSize: 32,
-    fontFamily: 'Jersey20',
-    color: '#A87676',
-    marginBottom: 20,
-  },
-  weekRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  weekLabel: {
-    fontWeight: 'bold',
-    marginRight: 10,
-  },
-  weekInput: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
+    title: { fontSize: 35, fontFamily: 'Jersey20', color: '#A87676', marginBottom: 20 },
+
   dayHeader: {
     fontSize: 16,
     fontWeight: 'bold',
