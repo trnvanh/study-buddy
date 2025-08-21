@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIn
 import { useBuddy } from '../../context/buddy-context';
 import { Pet } from '../../types/pet';
 import { useRouter } from 'expo-router';
+import { API_BASE_URL } from '@/config/constants';
 
 const screenWidth = Dimensions.get('window').width;
 const circleSize = (screenWidth - 100) / 3;
@@ -19,12 +20,15 @@ export default function BuddyScreen() {
     console.log("Fetching buddies...");
     const fetchBuddies = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/pets'); 
-        console.log("Status:", res.status);
-        const data = await res.json();
-        console.log("Data:", data);
-        const unlockedBuddies = data.filter((pet: Pet) => pet.unlocked);
-        setBuddies(unlockedBuddies);
+        const res = await fetch(`${API_BASE_URL}/api/pets`);
+        if (res.ok) {
+          const data = await res.json();
+          const unlockedBuddies = data.filter((pet: Pet) => pet.unlocked);
+          setBuddies(unlockedBuddies);
+          if (unlockedBuddies.length > 0) setSelectedBuddy(unlockedBuddies[0]);
+        } else {
+          console.log('Fetch error status:', res.status);
+        }
       } catch (error) {
         console.error('Failed to fetch pets:', error);
       } finally {
@@ -73,14 +77,6 @@ export default function BuddyScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.startButton}
-        onPress={() => {
-          if (selectedBuddy) router.push('/pomodoro');
-        }}
-      >
-        <Text style={styles.startText}>Start</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -146,11 +142,11 @@ const styles = StyleSheet.create({
 
   startButton: {
     backgroundColor: '#E1ACAC',
-    width: 150,
+    width: 125,
     paddingVertical: 12,
-    paddingHorizontal: 50,
+    paddingHorizontal: 40,
     borderRadius: 20,
-    marginLeft: 170,
+    marginLeft: 140,
   },
   startText: { fontSize: 18, color: 'white', fontWeight: 'bold' },
 });

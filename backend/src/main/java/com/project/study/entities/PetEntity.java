@@ -12,14 +12,16 @@ public class PetEntity {
     private String name;
     private String imageUrl;
     private boolean isUnlocked;
+    private String quote;
 
     public PetEntity() {
     }
 
-    public PetEntity(String name, String imageUrl, boolean isUnlocked) {
+    public PetEntity(String name, String imageUrl, boolean isUnlocked, String quote) {
         this.name = name;
         this.imageUrl = imageUrl;
         this.isUnlocked = isUnlocked;
+        this.quote = quote;
     }
 
     public Long getId() {
@@ -32,6 +34,10 @@ public class PetEntity {
 
     public String getImageUrl() {
         return imageUrl;
+    }
+
+    public String getQuote() {
+        return quote;
     }
 
     public boolean isUnlocked() {
@@ -48,6 +54,10 @@ public class PetEntity {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public void setQuote(String quote) {
+        this.quote = quote;
     }
 
     public void setUnlocked(boolean unlocked) {

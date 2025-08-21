@@ -1,84 +1,148 @@
-// app/(tabs)/scheduling.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Modal, Alert,
+  View, Text, StyleSheet, TextInput, TouchableOpacity,
+  FlatList, Modal, Alert
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-
-const initialTasks = {
-  'Mon 16 Sep': [
-    { id: 1, time: '9 am - 10 am', title: 'Organic Chemistry HW', due: '18 Sep at 23:59', done: false },
-    { id: 2, time: '12 am - 1 am', title: 'Report Software course', due: '24 Sep at 23:59', done: false },
-    { id: 3, time: '6 pm - 10 pm', title: 'Matrix Analysis HW', due: '20 Sep at 23:59', done: false },
-  ],
-  'Tue 17 Sep': [
-    { id: 4, time: '8 am - 10 am', title: 'Organic Chemistry HW', due: '18 Sep at 23:59', done: false },
-    { id: 5, time: '12 am - 1 am', title: 'Report Software course', due: '24 Sep at 23:59', done: false },
-    { id: 6, time: '8 pm - 10 pm', title: 'Matrix Analysis HW', due: '20 Sep at 23:59', done: false },
-  ],
-};
+import { API_BASE_URL } from '@/config/constants';
+import { Task } from '@/types/task';
 
 export default function SchedulingScreen() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const [tasks, setTasks] = useState<{ [day: string]: Task[] }>({});
   const [modalVisible, setModalVisible] = useState(false);
-  const [currentDay, setCurrentDay] = useState('Mon 16 Sep');
-  const [newTask, setNewTask] = useState({ title: '', time: '', due: '' });
+  const [newTask, setNewTask] = useState({ title: '', duration: 0 });
+  const [taskTime, setTaskTime] = useState<Date | null>(null);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const toggleDone = (day: string, id: number) => {
-    setTasks(prev => ({
-      ...prev,
-      [day]: prev[day].map(t => t.id === id ? { ...t, done: !t.done } : t),
-    }));
+  // Fetch tasks
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/tasks`);
+        const json = await res.json();
+        const data: any[] = Array.isArray(json) ? json : json.tasks ?? [];
+
+        // Convert string → Date
+        const tasksWithDates: Task[] = data.map(task => ({
+          ...task,
+          time: new Date(task.time),
+        }));
+
+        // Sort by start time
+        tasksWithDates.sort((a, b) => a.time.getTime() - b.time.getTime());
+
+        // Group by weekday
+        const grouped: { [day: string]: Task[] } = {};
+        tasksWithDates.forEach((task) => {
+          const dayKey = task.time.toLocaleDateString('en-US', { weekday: 'long' });
+          if (!grouped[dayKey]) grouped[dayKey] = [];
+          grouped[dayKey].push(task);
+        });
+
+        setTasks(grouped);
+      } catch (err) {
+        console.error('Failed to fetch tasks:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, []);
+
+  // Toggle done
+  const toggleDone = async (day: string, id: number) => {
+    try {
+      await fetch(`${API_BASE_URL}/api/tasks/${id}/toggle`, {
+        method: 'PUT',
+      });
+
+      setTasks(prev => ({
+        ...prev,
+        [day]: prev[day].map(t => t.id === id ? { ...t, done: !t.done } : t),
+      }));
+    } catch (err) {
+      console.error('Failed to toggle task:', err);
+    }
   };
 
-  const handleAddTask = () => {
-    if (!newTask.title || !newTask.time || !newTask.due) {
+  // Add Task
+  const handleAddTask = async () => {
+    if (!newTask.title || !taskTime || !newTask.duration) {
       Alert.alert('Fill all fields');
       return;
     }
-    setTasks(prev => ({
-      ...prev,
-      [currentDay]: [
-        ...(prev[currentDay] || []),
-        { id: Date.now(), title: newTask.title, time: newTask.time, due: newTask.due, done: false },
-      ],
-    }));
-    setNewTask({ title: '', time: '', due: '' });
-    setModalVisible(false);
+
+    try {
+      const formattedTime = taskTime.toISOString();
+      const taskDayKey = taskTime.toLocaleDateString('en-US', { weekday: 'long' });
+
+      const res = await fetch(`${API_BASE_URL}/api/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTask.title,
+          time: formattedTime,
+          duration: newTask.duration,
+          done: false,
+        }),
+      });
+
+      const saved = await res.json();
+
+      const savedTask: Task = {
+        ...saved,
+        time: new Date(saved.time),
+      };
+
+      setTasks(prev => ({
+        ...prev,
+        [taskDayKey]: [...(prev[taskDayKey] || []), savedTask],
+      }));
+
+      // Reset
+      setNewTask({ title: '', duration: 0 });
+      setTaskTime(null);
+      setModalVisible(false);
+    } catch (err) {
+      console.error('Failed to add task:', err);
+    }
   };
 
-  const renderTask = (day: string, task: any) => {
-    const dueColor = task.due.includes('18') ? '#ff5f5f' : '#ffd15c';
+  // Render task card
+  const renderTask = (day: string, task: Task) => (
+    <View key={task.id} style={styles.taskCard}>
+      <TouchableOpacity onPress={() => toggleDone(day, task.id)}>
+        <Ionicons name={task.done ? 'checkbox' : 'square-outline'} size={24} color="#555" />
+      </TouchableOpacity>
+      <View style={{ flex: 1, marginLeft: 8 }}>
+        <Text style={{ fontWeight: 'bold' }}>
+          {task.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {" • "}{task.duration} min
+        </Text>
+        <Text style={{ textDecorationLine: task.done ? 'line-through' : 'none' }}>
+          {task.title}
+        </Text>
+      </View>
+      <TouchableOpacity style={{ marginLeft: 6 }}>
+        <MaterialIcons name="edit" size={20} color="#444" />
+      </TouchableOpacity>
+    </View>
+  );
 
+  if (loading) {
     return (
-      <View key={task.id} style={styles.taskCard}>
-        <TouchableOpacity onPress={() => toggleDone(day, task.id)}>
-          <Ionicons name={task.done ? 'checkbox' : 'square-outline'} size={24} color="#555" />
-        </TouchableOpacity>
-        <View style={{ flex: 1, marginLeft: 8 }}>
-          <Text style={{ fontWeight: 'bold' }}>{task.time}</Text>
-          <Text style={{ textDecorationLine: task.done ? 'line-through' : 'none' }}>{task.title}</Text>
-        </View>
-        <View style={[styles.dueTag, { backgroundColor: dueColor }]}>
-          <Text style={{ fontSize: 10, color: 'white' }}>{task.due}</Text>
-        </View>
-        <TouchableOpacity style={{ marginLeft: 6 }}>
-          <MaterialIcons name="edit" size={20} color="#444" />
-        </TouchableOpacity>
+      <View style={styles.container}>
+        <Text>Loading schedule...</Text>
       </View>
     );
-  };
+  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Scheduling</Text>
-
-      {/* Week Selector */}
-      <View style={styles.weekRow}>
-        <Text style={styles.weekLabel}>Week</Text>
-        <TextInput style={styles.weekInput} placeholder="16 Sep" />
-        <Ionicons name="calendar-outline" size={20} color="#444" style={{ marginLeft: 8 }} />
-      </View>
 
       <FlatList
         data={Object.keys(tasks)}
@@ -86,34 +150,81 @@ export default function SchedulingScreen() {
         renderItem={({ item: day }) => (
           <View>
             <Text style={styles.dayHeader}>{day}</Text>
-            {tasks[day].map(task => renderTask(day, task))}
-            <TouchableOpacity style={styles.addTaskBtn} onPress={() => {
-              setCurrentDay(day);
-              setModalVisible(true);
-            }}>
+            {tasks[day]?.map(task => renderTask(day, task))}
+            <TouchableOpacity
+              style={styles.addTaskBtn}
+              onPress={() => setModalVisible(true)}
+            >
               <Text style={styles.plus}>＋</Text>
             </TouchableOpacity>
           </View>
         )}
       />
 
-      {/* Add Task Modal */}
+      {/* Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Add New Task</Text>
-            <TextInput placeholder="Task Title" value={newTask.title} onChangeText={text => setNewTask({ ...newTask, title: text })} style={styles.input} />
-            <TextInput placeholder="Time (e.g. 1 pm - 2 pm)" value={newTask.time} onChangeText={text => setNewTask({ ...newTask, time: text })} style={styles.input} />
-            <TextInput placeholder="Due (e.g. 24 Sep at 23:59)" value={newTask.due} onChangeText={text => setNewTask({ ...newTask, due: text })} style={styles.input} />
-            <TouchableOpacity style={styles.saveBtn} onPress={handleAddTask}>
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Save Task</Text>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>
+              Add New Schedule
+            </Text>
+
+            {/* Title */}
+            <TextInput
+              placeholder="Task Title"
+              value={newTask.title}
+              onChangeText={text => setNewTask({ ...newTask, title: text })}
+              style={styles.input}
+            />
+
+            {/* Time */}
+            <TouchableOpacity
+              style={[styles.input, { justifyContent: 'center' }]}
+              onPress={() => setShowTimePicker(true)}
+            >
+              <Text style={{ color: taskTime ? '#000' : '#999' }}>
+                {taskTime
+                  ? taskTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : 'Select time'}
+              </Text>
             </TouchableOpacity>
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={taskTime || new Date()}
+                mode="time"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowTimePicker(false);
+                  if (selectedDate) setTaskTime(selectedDate);
+                }}
+              />
+            )}
+
+            {/* Duration */}
+            <TextInput
+              placeholder="Duration (minutes)"
+              value={newTask.duration ? String(newTask.duration) : ''}
+              keyboardType="numeric"
+              onChangeText={text =>
+                setNewTask({ ...newTask, duration: Number(text) || 0 })
+              }
+              style={styles.input}
+            />
+
+            {/* Save */}
+            <TouchableOpacity style={styles.saveBtn} onPress={handleAddTask}>
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Save Schedule</Text>
+            </TouchableOpacity>
+
+            {/* Cancel */}
             <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginTop: 10 }}>
               <Text style={{ color: '#999' }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
     </View>
   );
 }
@@ -125,28 +236,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 20,
   },
-  title: {
-    fontSize: 32,
-    fontFamily: 'Jersey20',
-    color: '#A87676',
-    marginBottom: 20,
-  },
-  weekRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  weekLabel: {
-    fontWeight: 'bold',
-    marginRight: 10,
-  },
-  weekInput: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
+  title: { fontSize: 35, fontFamily: 'Jersey20', color: '#A87676', marginBottom: 20 },
   dayHeader: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -160,11 +250,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     marginBottom: 8,
-  },
-  dueTag: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
   },
   addTaskBtn: {
     backgroundColor: '#fff',

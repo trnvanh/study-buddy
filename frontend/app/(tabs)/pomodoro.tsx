@@ -21,7 +21,7 @@ export default function PomodoroScreen() {
 
   const { selectedBuddy } = useBuddy();
 
-  const progress = ((MODES.studying.time - timeLeft) / MODES.studying.time) * 100;
+  const progress = ((MODES[mode].time - timeLeft) / MODES[mode].time) * 100;
 
   // Play sound and vibrate
   const handleEnd = async () => {
@@ -98,7 +98,7 @@ export default function PomodoroScreen() {
 
       {/* Quote box */}
       <View style={styles.messageBox}>
-        <Text style={styles.messageText}>I’m watching you hooman. Better be studying.</Text>
+        <Text style={styles.messageText}>{selectedBuddy?.quote}</Text>
       </View>
 
 
@@ -114,7 +114,7 @@ export default function PomodoroScreen() {
         >
         {() => (
             <Image
-            source={selectedBuddy?.image}
+            source={{uri:selectedBuddy?.imageUrl}}
             style={styles.dogImage}
             />
         )}
@@ -225,11 +225,11 @@ const styles = StyleSheet.create({
 
   startButton: {
     backgroundColor: '#E1ACAC',
-    width: 155,
+    width: 135,
     paddingVertical: 12,
-    paddingHorizontal: 50,
+    paddingHorizontal: 40,
     borderRadius: 20,
-    marginLeft: 20,
+    marginLeft: 10,
   },
   startText: {
     color: '#fff',
