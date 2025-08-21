@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIn
 import { useBuddy } from '../../context/buddy-context';
 import { Pet } from '../../types/pet';
 import { useRouter } from 'expo-router';
+import { API_BASE_URL } from '@/config/constants';
 
 const screenWidth = Dimensions.get('window').width;
 const circleSize = (screenWidth - 100) / 3;
@@ -19,7 +20,7 @@ export default function BuddyScreen() {
     console.log("Fetching buddies...");
     const fetchBuddies = async () => {
       try {
-        const res = await fetch('http://10.0.2.2:8080/api/pets');
+        const res = await fetch(`${API_BASE_URL}/api/pets`);
         if (res.ok) {
           const data = await res.json();
           const unlockedBuddies = data.filter((pet: Pet) => pet.unlocked);

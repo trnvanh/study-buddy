@@ -36,8 +36,7 @@ public class TaskController {
         return repo.findById(id).map(existing -> {
             existing.setTitle(payload.getTitle());
             existing.setTime(payload.getTime());
-            existing.setDue(payload.getDue());
-            existing.setDay(payload.getDay());
+            existing.setDuration(payload.getDuration());
             existing.setDone(payload.isDone());
             return repo.save(existing);
         }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));

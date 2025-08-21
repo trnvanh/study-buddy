@@ -1,8 +1,7 @@
-type Task = {
+export type Task = {
   id: number;
-  day: string;
-  time: string;
+  time: Date;
   title: string;
-  due: string;
+  duration: string;
   done: boolean;
 };

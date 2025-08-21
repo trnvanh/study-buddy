@@ -1,6 +1,7 @@
 package com.project.study.entities;
 
 import jakarta.persistence.*;
+import java.time.*;
 
 @Entity
 @Table(name = "tasks")
@@ -14,12 +15,10 @@ public class TaskEntity {
     private String title;
 
     @Column(nullable = false)
-    private String time;
+    private LocalDateTime time;
 
     @Column(nullable = false)
-    private String due;
-    @Column(nullable = false)
-    private String day;
+    private String duration;
 
     @Column(nullable = false)
     private boolean done = false;
@@ -27,11 +26,10 @@ public class TaskEntity {
     // Constructor
     public TaskEntity() {}
 
-    public TaskEntity(String title, String time, String due, String day, boolean done) {
+    public TaskEntity(String title, LocalDateTime time, String duration, boolean done) {
         this.title = title;
         this.time = time;
-        this.due = due;
-        this.day = day;
+        this.duration = duration;
         this.done = done;
     }
 
@@ -41,14 +39,11 @@ public class TaskEntity {
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
-    public String getTime() { return time; }
-    public void setTime(String time) { this.time = time; }
+    public LocalDateTime getTime() { return time; }
+    public void setTime(LocalDateTime time) { this.time = time; }
 
-    public String getDue() { return due; }
-    public void setDue(String due) { this.due = due; }
-
-    public String getDay() { return day; }
-    public void setDay(String day) { this.day = day; }
+    public String getDuration() { return duration; }
+    public void setDuration(String duration) { this.duration = duration; }
 
     public boolean isDone() { return done; }
     public void setDone(boolean done) { this.done = done; }

@@ -7,9 +7,6 @@ export default function ProfileScreen() {
   const [shortTermGoals, setShortTermGoals] = useState('');
   const [longTermGoals, setLongTermGoals] = useState('');
 
-  // Fake value for weekly sessions — replace with real tracking later
-  const weeklySessions = 7;
-
   return (
     <View style={styles.container}>
       <Text style={styles.header}>My Profile</Text>
