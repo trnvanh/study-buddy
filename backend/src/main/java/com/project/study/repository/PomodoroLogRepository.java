@@ -12,7 +12,7 @@ import java.util.List;
 
 @Repository
 public interface PomodoroLogRepository extends JpaRepository<PomodoroLogEntity, Long> {
-    List<PomodoroLogEntity> findByPetId(Long petId);
+    List<PomodoroLogEntity> findByPetId(Integer petId);
 
     //@Query("SELECT p FROM PomodoroLog p WHERE p.pet.id = :petId AND p.startTime >= :start AND p.startTime <= :end")
     //List<PomodoroLogEntity> findByPet_IdAndStartTimeBetween(Long petId, LocalDateTime start, LocalDateTime end);
