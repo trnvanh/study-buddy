@@ -14,7 +14,7 @@ export default function ProfileScreen() {
       {/* Avatar Row */}
       <View style={styles.avatarRow}>
         <Image
-          source={require('../../assets/images/shiba.png')} // use your buddy image here
+          source={require('../../assets/images/welcome.png')}
           style={styles.avatar}
         />
         <View style={styles.squareBox}>
