@@ -15,6 +15,7 @@ export default function SchedulingScreen() {
   const [taskTime, setTaskTime] = useState<Date | null>(null);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Fetch tasks
   useEffect(() => {
@@ -25,10 +26,12 @@ export default function SchedulingScreen() {
         const data: any[] = Array.isArray(json) ? json : json.tasks ?? [];
 
         // Convert string → Date
-        const tasksWithDates: Task[] = data.map(task => ({
-          ...task,
-          time: new Date(task.time),
-        }));
+        const tasksWithDates: Task[] = data
+            .filter(task => !task.done)
+            .map(task => ({
+              ...task,
+              time: new Date(task.time),
+            }));
 
         // Sort by start time
         tasksWithDates.sort((a, b) => a.time.getTime() - b.time.getTime());
@@ -59,17 +62,28 @@ export default function SchedulingScreen() {
         method: 'PUT',
       });
 
-      setTasks(prev => ({
-        ...prev,
-        [day]: prev[day].map(t => t.id === id ? { ...t, done: !t.done } : t),
-      }));
+       // Cross out immediately
+       setTasks(prev => ({
+            ...prev,
+            [day]: prev[day].map(t =>
+              t.id === id ? { ...t, done: !t.done } : t
+            ),
+       }));
+
+       // Transition removing it after delay
+       setTimeout(() => {
+            setTasks(prev => ({
+              ...prev,
+              [day]: prev[day].filter(t => t.id !== id),
+            }));
+       }, 800);
     } catch (err) {
       console.error('Failed to toggle task:', err);
     }
   };
 
-  // Add Task
-  const handleAddTask = async () => {
+  // Save task when adding or modifying task
+  const handleSaveTask = async () => {
     if (!newTask.title || !taskTime || !newTask.duration) {
       Alert.alert('Fill all fields');
       return;
@@ -79,37 +93,69 @@ export default function SchedulingScreen() {
       const formattedTime = taskTime.toISOString();
       const taskDayKey = taskTime.toLocaleDateString('en-US', { weekday: 'long' });
 
-      const res = await fetch(`${API_BASE_URL}/api/tasks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newTask.title,
-          time: formattedTime,
-          duration: newTask.duration,
-          done: false,
-        }),
-      });
+      if (editingTask) {
+        // Update existing task
+        const res = await fetch(`${API_BASE_URL}/api/tasks/${editingTask.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...editingTask,
+            title: newTask.title,
+            time: formattedTime,
+            duration: newTask.duration,
+          }),
+        });
 
-      const saved = await res.json();
+        const updated = await res.json();
+        const updatedTask: Task = { ...updated, time: new Date(updated.time) };
 
-      const savedTask: Task = {
-        ...saved,
-        time: new Date(saved.time),
-      };
+        setTasks(prev => {
+          const updatedTasks = { ...prev };
+          // Remove task from old day group (in case user changed time/day)
+          for (const key in updatedTasks) {
+            updatedTasks[key] = updatedTasks[key].filter(t => t.id !== editingTask.id);
+          }
+          // Add task into new day group
+          if (!updatedTasks[taskDayKey]) updatedTasks[taskDayKey] = [];
+          updatedTasks[taskDayKey].push(updatedTask);
 
-      setTasks(prev => ({
-        ...prev,
-        [taskDayKey]: [...(prev[taskDayKey] || []), savedTask],
-      }));
+          // Sort tasks in the group
+          updatedTasks[taskDayKey].sort((a, b) => a.time.getTime() - b.time.getTime());
 
-      // Reset
+          return updatedTasks;
+        });
+      } else {
+        // Create new task
+        const res = await fetch(`${API_BASE_URL}/api/tasks`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: newTask.title,
+            time: formattedTime,
+            duration: newTask.duration,
+            done: false,
+          }),
+        });
+
+        const saved = await res.json();
+        const savedTask: Task = { ...saved, time: new Date(saved.time) };
+
+        setTasks(prev => ({
+          ...prev,
+          [taskDayKey]: [...(prev[taskDayKey] || []), savedTask],
+        }));
+      }
+
+      // Reset after save
       setNewTask({ title: '', duration: 0 });
       setTaskTime(null);
+      setEditingTask(null);
       setModalVisible(false);
     } catch (err) {
-      console.error('Failed to add task:', err);
+      console.error('Failed to save task:', err);
     }
   };
+
 
   // Render task card
   const renderTask = (day: string, task: Task) => (
@@ -126,7 +172,12 @@ export default function SchedulingScreen() {
           {task.title}
         </Text>
       </View>
-      <TouchableOpacity style={{ marginLeft: 6 }}>
+      <TouchableOpacity style={{ marginLeft: 6 }} onPress={() => {
+        setEditingTask(task);
+        setNewTask({title: task.title, duration: task.duration});
+        setTaskTime(task.time);
+        setModalVisible(true);
+      }}>
         <MaterialIcons name="edit" size={20} color="#444" />
       </TouchableOpacity>
     </View>
@@ -213,8 +264,8 @@ export default function SchedulingScreen() {
             />
 
             {/* Save */}
-            <TouchableOpacity style={styles.saveBtn} onPress={handleAddTask}>
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Save Schedule</Text>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSaveTask}>
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>{editingTask ? 'Update Task' : 'Save Schedule'}</Text>
             </TouchableOpacity>
 
             {/* Cancel */}
@@ -236,7 +287,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 20,
   },
-  title: { fontSize: 35, fontFamily: 'Jersey20', color: '#A87676', marginBottom: 20 },
+  title: { fontSize: 35, fontFamily: 'Jersey20', color: '#A87676', marginBottom: 10, paddingHorizontal: 110 },
   dayHeader: {
     fontSize: 16,
     fontWeight: 'bold',

@@ -13,19 +13,16 @@ public class PomodoroLogEntity {
     private LocalDateTime endTime;   
     private int durationMinutes;     
     private String taskName;         
-
-    @ManyToOne
-    @JoinColumn(name = "pet_id")
-    private PetEntity pet;
+    private Integer petId;
 
     // Constructors
     public PomodoroLogEntity() {}
-    public PomodoroLogEntity(LocalDateTime startTime, LocalDateTime endTime, int durationMinutes, String taskName, PetEntity pet) {
+    public PomodoroLogEntity(LocalDateTime startTime, LocalDateTime endTime, int durationMinutes, String taskName, Integer petId) {
         this.startTime = startTime;
         this.endTime = endTime;
         this.durationMinutes = durationMinutes;
-        this.taskName = taskName;
-        this.pet = pet;
+        this.taskName = taskName; // can be null
+        this.petId = petId;
     }
 
     // Getters and setters
@@ -41,6 +38,6 @@ public class PomodoroLogEntity {
 
     public String getTaskName() { return taskName; }
     public void setTaskName(String taskName) { this.taskName = taskName; }
-    public PetEntity getPet() { return pet; }
-    public void setPet(PetEntity pet) { this.pet = pet; }
+    public Integer getPetId() { return petId; }
+    public void setPet(int petId) { this.petId = petId; }
 }

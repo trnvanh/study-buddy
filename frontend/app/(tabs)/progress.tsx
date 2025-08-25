@@ -4,36 +4,27 @@ import { ProgressBar } from 'react-native-paper';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { API_BASE_URL } from '@/config/constants';
+import { StatsResponse } from '@/types/stats';
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function ProgressScreen() {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ daily: 0, weekly: 0, lastWeek: 0, weeklyTrend: [] });
-  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<StatsResponse | null>(null);
 
-
-  const WEEKLY_GOAL = 10; // can be dynamic later
+  const WEEKLY_GOAL = 10; // can be dynamic later when build user info 
 
   useEffect(() => {
-    const fetchProgress = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/pomodoro_progress/progress`);
-        const data = await res.json();
-        setStats({
-          daily: Number(data.daily) || 0,
-          weekly: Number(data.weekly) || 0,
-          lastWeek: Number(data.lastWeek) || 0,
-          weeklyTrend: data.weeklyTrend || [],
-        });
-      } catch (err) {
-        console.error('Error fetching progress:', err);
-        setError("Failed to load progress");
-      } finally {
+    fetch(`${API_BASE_URL}/api/stats/progress`)
+      .then((res) => res.json())
+      .then((data) => {
+        setStats(data);
         setLoading(false);
-      }
-    };
-    fetchProgress();
+      })
+      .catch((err) => {
+        console.error("Failed to fetch stats:", err);
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
@@ -44,44 +35,40 @@ export default function ProgressScreen() {
     );
   }
 
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text style={{ color: 'red' }}>{error}</Text>
-      </View>
-    );
+  if (!stats) {
+    return <Text style={styles.errorText}>No stats available.</Text>;
   }
 
   // Handle weekly change %
   let weeklyChange: number;
-  if (!stats.lastWeek && !stats.weekly) {
+  if (!stats.lastWeekCount && !stats.weeklyCount) {
     weeklyChange = 0;
-  } else if (!stats.lastWeek) {
+  } else if (!stats.lastWeekCount) {
     weeklyChange = 100;
   } else {
-    weeklyChange = Number(((stats.weekly - stats.lastWeek) / stats.lastWeek * 100).toFixed(1));
+    weeklyChange = Number(((stats.weeklyCount - stats.lastWeekCount) / stats.lastWeekCount * 100).toFixed(1));
   }
 
 
-  const progress = Math.min(stats.weekly / WEEKLY_GOAL, 1);
+  const progress = Math.min(stats.weeklyCount / WEEKLY_GOAL, 1);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📊 Progress</Text>
+      <Text style={styles.title}>Progress</Text>
 
       {/* Daily */}
       <View style={styles.section}>
         <Text style={styles.subtitle}>Daily Pomodoros</Text>
-        <Text style={styles.value}>{stats.daily} completed</Text>
+        <Text style={styles.value}>{stats.dailyCount} completed</Text>
       </View>
 
       {/* Weekly */}
       <View style={styles.section}>
         <Text style={styles.subtitle}>Weekly Pomodoros</Text>
-        <Text style={styles.value}>{stats.weekly} completed</Text>
+        <Text style={styles.value}>{stats.weeklyCount} completed</Text>
 
         <ProgressBar progress={progress} color="#A87676" style={styles.progressBar} />
-        <Text>{stats.weekly}/{WEEKLY_GOAL} weekly goal</Text>
+        <Text>{stats.weeklyCount}/{WEEKLY_GOAL} weekly goal</Text>
       </View>
 
       {/* Weekly comparison */}
@@ -135,5 +122,10 @@ const styles = StyleSheet.create({
   section: { marginBottom: 30, alignItems: 'center', width: '90%' },
   subtitle: { fontSize: 18, fontWeight: '600', marginBottom: 10, color: "#5C3D3D" },
   value: { fontSize: 20, fontWeight: 'bold' },
-  progressBar: { width: '100%', height: 10, borderRadius: 5, marginTop: 8, marginBottom: 4 }
+  progressBar: { width: '100%', height: 10, borderRadius: 5, marginTop: 8, marginBottom: 4 },
+  errorText: {
+    textAlign: "center",
+    marginTop: 50,
+    color: "#555",
+  },
 });

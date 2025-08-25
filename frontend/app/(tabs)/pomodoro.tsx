@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
+import { API_BASE_URL } from '@/config/constants';
 
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 import { useBuddy } from '../../context/buddy-context';
 
 const MODES = {
-  studying: { label: 'Studying', time: 45 * 60 },
+  studying: { label: 'Studying', time: 60 },
   short: { label: 'Short Break', time: 5 * 60 },
   long: { label: 'Long Break', time: 15 * 60 },
 };
@@ -23,6 +24,32 @@ export default function PomodoroScreen() {
 
   const progress = ((MODES[mode].time - timeLeft) / MODES[mode].time) * 100;
 
+  const logPomodoro = async (petId: number, taskName: string, durationMinutes: number) => {
+    try {
+      const body = {
+        petId,
+        taskName,
+        durationMinutes,
+        startTime: new Date().toISOString(),  // send current time
+        endTime: new Date(new Date().getTime() + durationMinutes * 60000).toISOString(), // end time
+      };
+
+      const res = await fetch(`${API_BASE_URL}/api/pomodoro_logs/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      console.log("Pomodoro log saved:", data);
+    } catch (err) {
+      console.error("Failed to save pomodoro log:", err);
+    }
+  };
+
+
   // Play sound and vibrate
   const handleEnd = async () => {
     setIsRunning(false);
@@ -32,6 +59,15 @@ export default function PomodoroScreen() {
       require('../../assets/sounds/alarm.mp3') 
     );
     await sound.playAsync();
+
+    // Save log if current mode was studying
+    if (mode === 'studying' && selectedBuddy) {
+        await logPomodoro(
+            selectedBuddy.id,
+            "Study Session",
+            MODES.studying.time / 60,
+        );
+    }
 
     // Auto-switch modes
     if (mode === 'studying') {
