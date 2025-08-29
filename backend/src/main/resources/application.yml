@@ -7,6 +7,9 @@ spring:
     username: petapp_user
     password: 8mJAByyWEWCCbUGOrMNErQhVJugyUIV2
     driver-class-name: org.postgresql.Driver
+  web:
+    resources:
+      static-locations: classpath:/static/, file:uploads/
 
   jpa:
     hibernate:

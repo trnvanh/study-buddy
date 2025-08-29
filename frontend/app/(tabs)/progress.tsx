@@ -1,18 +1,47 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { ProgressBar } from 'react-native-paper';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import { API_BASE_URL } from '@/config/constants';
 import { StatsResponse } from '@/types/stats';
+import { Profile } from '@/types/profile';
+import * as Application from 'expo-application';
 
 const screenWidth = Dimensions.get("window").width;
 
 export default function ProgressScreen() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<StatsResponse | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
-  const WEEKLY_GOAL = 10; // can be dynamic later when build user info 
+  // Fetch profile to get weekly goal
+  useEffect(() => {
+      const fetchProfile = async () => {
+        let deviceId: string;
+  
+        if (Platform.OS === 'android') {
+          deviceId = Application.getAndroidId() ?? 'unknown-device';
+        } else {
+          const iosId = await Application.getIosIdForVendorAsync();
+          deviceId = iosId ?? 'unknown-device';
+        }
+  
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/profile/${deviceId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setProfile(data);
+          }
+        } catch (err) {
+          console.error('Failed to fetch profile:', err);
+        }
+      };
+  
+      fetchProfile();
+  }, []);
+
+  const WEEKLY_GOAL = profile? profile.goalPerWeek : 10;
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/api/stats/progress`)
