@@ -1,26 +1,66 @@
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
+import * as Application from 'expo-application';
 import { API_BASE_URL } from '@/config/constants';
 
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 import { useBuddy } from '../../context/buddy-context';
+import { Profile } from '@/types/profile';
 
-const MODES = {
-  studying: { label: 'Studying', time: 60 },
-  short: { label: 'Short Break', time: 5 * 60 },
-  long: { label: 'Long Break', time: 15 * 60 },
-};
 
 export default function PomodoroScreen() {
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [mode, setMode] = useState<'studying' | 'short' | 'long'>('studying');
-  const [timeLeft, setTimeLeft] = useState(MODES.studying.time);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
   const { selectedBuddy } = useBuddy();
+
+  // Fetch profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      let deviceId: string;
+
+      if (Platform.OS === 'android') {
+        deviceId = Application.getAndroidId() ?? 'unknown-device';
+      } else {
+        const iosId = await Application.getIosIdForVendorAsync();
+        deviceId = iosId ?? 'unknown-device';
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/profile/${deviceId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data);
+
+          // initialize studying mode with profile values
+          setTimeLeft((data.pomodoroMinutes ?? 25) * 60);
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile:', err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // Build MODES dynamically based on profile
+  const MODES = profile
+    ? {
+        studying: { label: 'Studying', time: profile.pomodoroMinutes * 60 },
+        short: { label: 'Short Break', time: profile.shortBreakMinutes * 60 },
+        long: { label: 'Long Break', time: profile.longBreakMinutes * 60 },
+      }
+    : {
+        studying: { label: 'Studying', time: 25 * 60 },
+        short: { label: 'Short Break', time: 5 * 60 },
+        long: { label: 'Long Break', time: 15 * 60 },
+      };
 
   const progress = ((MODES[mode].time - timeLeft) / MODES[mode].time) * 100;
 
@@ -260,12 +300,11 @@ const styles = StyleSheet.create({
   },
 
   startButton: {
-    backgroundColor: '#E1ACAC',
-    width: 135,
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 20,
-    marginLeft: 10,
+      backgroundColor: "#A87676",
+      padding: 12,
+      borderRadius: 10,
+      alignItems: "center",
+      marginTop: 20,
   },
   startText: {
     color: '#fff',
