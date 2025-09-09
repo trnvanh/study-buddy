@@ -195,22 +195,34 @@ export default function SchedulingScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Scheduling</Text>
 
-      <FlatList
-        data={Object.keys(tasks)}
-        keyExtractor={(item) => item}
-        renderItem={({ item: day }) => (
-          <View>
-            <Text style={styles.dayHeader}>{day}</Text>
-            {tasks[day]?.map(task => renderTask(day, task))}
-            <TouchableOpacity
-              style={styles.addTaskBtn}
-              onPress={() => setModalVisible(true)}
-            >
-              <Text style={styles.plus}>＋</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      />
+      {tasks && Object.keys(tasks).length > 0? (
+        <FlatList
+          data={Object.keys(tasks)}
+          keyExtractor={(item) => item}
+          renderItem={({ item: day }) => (
+            <View>
+              <Text style={styles.dayHeader}>{day}</Text>
+              {tasks[day]?.map(task => renderTask(day, task))}
+              <TouchableOpacity
+                style={styles.addTaskBtn}
+                onPress={() => setModalVisible(true)}
+              >
+                <Text style={styles.plus}>＋</Text>
+              </TouchableOpacity>
+            </View>
+            )}
+          />
+        ) : (
+            <View style={{alignItems: "center", marginTop: 40}}>
+              <Text>
+                Start to add tasks now.
+              </Text>
+              <TouchableOpacity style={styles.addTaskBtn} onPress={() => setModalVisible(true)}>
+                <Text style={styles.plus}>Add task</Text>
+              </TouchableOpacity>
+            </View>
+        )
+      }
 
       {/* Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
