@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { useFocusEffect } from "@react-navigation/native";
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
 import * as Application from 'expo-application';
@@ -9,6 +10,7 @@ import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
 import { useBuddy } from '../../context/buddy-context';
 import { Profile } from '@/types/profile';
+import React from 'react';
 
 
 export default function PomodoroScreen() {
@@ -18,10 +20,18 @@ export default function PomodoroScreen() {
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
-  const { selectedBuddy } = useBuddy();
+  const { selectedBuddy, setSelectedBuddy, buddies } = useBuddy();
+
+  // On the first load when opening the app, set the first pet in the list as selected pet
+  useEffect(() => {
+    if (!selectedBuddy && buddies?.length > 0) {
+      setSelectedBuddy(buddies[0]);
+    }
+  }, [selectedBuddy, buddies]);
 
   // Fetch profile on mount
-  useEffect(() => {
+  useFocusEffect(
+    React.useCallback(() => {
     const fetchProfile = async () => {
       let deviceId: string;
 
@@ -47,7 +57,7 @@ export default function PomodoroScreen() {
     };
 
     fetchProfile();
-  }, []);
+  }, []));
 
   // Build MODES dynamically based on profile
   const MODES = profile
