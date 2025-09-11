@@ -90,8 +90,8 @@ export default function ProgressScreen() {
         {/* Daily */}
         <View style={styles.card}>
           <Text style={styles.subtitle}>Daily Progress</Text>
-          <Text style={styles.value}>{stats.dailyCount} sessions completed</Text>
-          <Text style={styles.value}>3 hours completed</Text> {/* Hardcoded for now, modify when complete updated stats service in backend */}
+          <Text style={styles.value}>{stats.dailyCount} sessions</Text>
+          <Text style={styles.value}>3 hours</Text> {/* Hardcoded for now, modify when complete updated stats service in backend */}
         </View>
 
         {/* Weekly */}
@@ -115,7 +115,7 @@ export default function ProgressScreen() {
       {/* Weekly comparison */}
       <View style={styles.section}>
         <Text style={styles.subtitle}>Comparison vs Last Week</Text>
-        <Text style={[styles.value, { color: weeklyChange >= 0 ? 'green' : 'red' }]}>
+        <Text style={[styles.percentage, { color: weeklyChange >= 0 ? 'green' : 'red' }]}>
           {weeklyChange >= 0 ? '+' : ''}{weeklyChange}%
         </Text>
         <Text>+ {stats.weeklyCount - stats.lastWeekCount} sessions</Text>
@@ -154,6 +154,21 @@ export default function ProgressScreen() {
           />
         </View>
       )}
+
+      {/* Unlocking new pets indicator */}
+      <View>
+          <Progress.Bar
+            progress={stats.totalHours / 10}
+            width={200}
+            height={10}
+            color="#A87676"
+            unfilledColor="#FFD0D0"
+            borderWidth={0}
+            borderRadius={5}
+            style={{ marginTop: 8 }}
+          />
+      </View>
+
     </View>
   );
 }
@@ -173,7 +188,7 @@ const styles = StyleSheet.create({
   },
   section: { 
     marginTop: 30,
-    marginBottom: 20, 
+    marginBottom: 10,
     alignItems: 'center', 
     width: '90%' 
   },
@@ -187,14 +202,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginHorizontal: 16,
-    marginTop: 20,
+    marginTop: 10,
   },
   card: {
     flex: 1,
     backgroundColor: "#E1ACAC",
     opacity: 0.75,
-    marginHorizontal: 5,
+    marginHorizontal: 10,
     padding: 16,
+    height: 150,
     borderRadius: 12,
     alignItems: "center",
     shadowColor: "#000",
@@ -209,9 +225,15 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   value: {
-    fontSize: 12,
+    fontSize: 15,
     fontWeight: "bold",
     color: "#444",
     marginTop: 4,
   },
+  percentage: {
+      fontSize: 25,
+      fontWeight: "bold",
+      color: "#444",
+      marginTop: 4,
+   },
 });
