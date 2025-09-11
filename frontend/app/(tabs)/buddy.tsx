@@ -24,6 +24,7 @@ export default function BuddyScreen() {
         if (res.ok) {
           const data = await res.json();
           const unlockedBuddies = data.filter((pet: Pet) => pet.unlocked);
+          const lockedBuddies = data.filter((pet: Pet) => !pet.unlocked);
           setBuddies(unlockedBuddies);
           if (unlockedBuddies.length > 0) setSelectedBuddy(unlockedBuddies[0]);
         } else {

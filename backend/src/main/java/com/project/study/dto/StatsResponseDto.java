@@ -9,17 +9,19 @@ public class StatsResponseDto {
     private long yearlyCount;
     private long lastWeekCount;
     private List<Long> weeklyTrend;
+    private long totalHours;
 
     public StatsResponseDto() {}
 
     public StatsResponseDto(long dailyCount, long weeklyCount, 
-    long monthlyCount, long yearlyCount, long lastWeekCount, List<Long> weeklyTrend) {
+    long monthlyCount, long yearlyCount, long lastWeekCount, List<Long> weeklyTrend, long totalHours) {
         this.dailyCount = dailyCount;
         this.weeklyCount = weeklyCount;
         this.monthlyCount = monthlyCount;
         this.yearlyCount = yearlyCount;
         this.lastWeekCount = lastWeekCount;
         this.weeklyTrend = weeklyTrend;
+        this.totalHours = totalHours;
     }
 
     public long getDailyCount() {
@@ -69,4 +71,9 @@ public class StatsResponseDto {
         this.weeklyTrend = weeklyTrend; 
     }
 
+    public long getTotalHours() { return totalHours; }
+
+    public void setTotalHours(long totalHours) {
+        this.totalHours = totalHours;
+    }
 }

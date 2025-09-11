@@ -39,4 +39,9 @@ public interface PomodoroLogRepository extends JpaRepository<PomodoroLogEntity, 
 
     @Query("SELECT COUNT(p) FROM PomodoroLogEntity p WHERE p.endTime >= :start AND p.endTime < :end")
     long countBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // Count total
+    @Query("SELECT SUM(p.durationMinutes) FROM PomodoroLogEntity p")
+    Long sumAllDurations();
+
 }

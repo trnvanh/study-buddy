@@ -39,6 +39,7 @@ public class PetController {
             pet.setName(updatedPet.getName());
             pet.setImageUrl(updatedPet.getImageUrl());
             pet.setUnlocked(updatedPet.isUnlocked());
+            pet.setHoursToUnlock(updatedPet.getHoursToUnlock());
             return petRepository.save(pet);
         }).orElseThrow();
     }

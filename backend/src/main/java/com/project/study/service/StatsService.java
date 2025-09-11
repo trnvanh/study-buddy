@@ -52,6 +52,8 @@ public class StatsService {
         long monthly = repository.countBetween(startOfMonth, endOfMonth);
         long yearly = repository.countBetween(startOfYear, endOfYear);
         long lastWeek = repository.countBetween(startOfLastWeek, endOfLastWeek);
+        long totalMinutes = repository.sumAllDurations() != null ? repository.sumAllDurations() : 0;
+        long totalHours = totalMinutes / 60;
 
         // Weekly trend Mon-Sun
         java.util.List<Long> weeklyTrend = new java.util.ArrayList<>(7);
@@ -61,7 +63,7 @@ public class StatsService {
             weeklyTrend.add(repository.countBetween(dayStart, dayEnd));
         }
 
-        return new StatsResponseDto(daily, weekly, monthly, yearly, lastWeek, weeklyTrend);
+        return new StatsResponseDto(daily, weekly, monthly, yearly, lastWeek, weeklyTrend, totalHours);
     }
 
 }
