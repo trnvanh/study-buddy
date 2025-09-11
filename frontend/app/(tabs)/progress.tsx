@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useFocusEffect } from "@react-navigation/native";
-import { View, Text, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import { Image as ExpoImage } from "expo-image";
+import { View, Text, StyleSheet, ActivityIndicator, Platform, Dimensions, Image, Animated } from 'react-native';
 import * as Progress from "react-native-progress";
 import { LineChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
 import { API_BASE_URL } from '@/config/constants';
 import { StatsResponse } from '@/types/stats';
 import { Profile } from '@/types/profile';
@@ -155,19 +155,43 @@ export default function ProgressScreen() {
         </View>
       )}
 
-      {/* Unlocking new pets indicator */}
-      <View>
-          <Progress.Bar
-            progress={stats.totalHours / 10}
-            width={200}
-            height={10}
-            color="#A87676"
-            unfilledColor="#FFD0D0"
-            borderWidth={0}
-            borderRadius={5}
-            style={{ marginTop: 8 }}
-          />
-      </View>
+            {/* Unlocking new pets indicator */}
+            <View style={styles.section}>
+              <Text style={styles.subtitle}>Unlock New Buddy</Text>
+
+              <View style={{ width: 250, height: 40, justifyContent: "center" }}>
+                {/* Background bar */}
+                <Progress.Bar
+                  progress={stats.totalHours / 10}
+                  width={250}
+                  height={10}
+                  color="#A87676"
+                  unfilledColor="#FFFFFF"
+                  borderWidth={0}
+                  borderRadius={5}
+                />
+
+                {/* Dog icon positioned relative to progress */}
+                <Animated.View
+                  style={{
+                    position: "absolute",
+                    left: (stats.totalHours / 10) * 250 - 20,
+                    top: -15,
+                  }}
+                >
+                  <ExpoImage
+                    source={require("../../assets/images/running_dog.gif")}
+                    style={{ width: 50, height: 50 }}
+                    contentFit="contain"
+                    autoplay
+                  />
+                </Animated.View>
+              </View>
+
+              <Text style={{ marginTop: 5 }}>
+                {stats.totalHours} / 10 hours
+              </Text>
+            </View>
 
     </View>
   );
@@ -187,7 +211,7 @@ const styles = StyleSheet.create({
     marginBottom: 20 
   },
   section: { 
-    marginTop: 30,
+    marginTop: 20,
     marginBottom: 10,
     alignItems: 'center', 
     width: '90%' 
