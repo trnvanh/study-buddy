@@ -1,0 +1,47 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main, progress] # adjust as needed
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      run: |
+        aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+        docker login --username AWS --password-stdin 768871025936.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+
+    - name: Build and push Docker image
+      run: |
+        IMAGE_TAG=latest
+        REPO_URI=<your-account-id>.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/anhtran/pomodoggo
+        docker build -t $REPO_URI:$IMAGE_TAG ./backend
+        docker push $REPO_URI:$IMAGE_TAG
+
+    - name: Deploy on EC2 via SSH
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        script: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin 768871025936.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          docker pull 768871025936.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/anhtran/pomodoggo:latest
+          docker stop study-buddy || true
+          docker rm study-buddy || true
+          docker run -d --name study-buddy -p 8080:8080 768871025936.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/anhtran/pomodoggo:latest
