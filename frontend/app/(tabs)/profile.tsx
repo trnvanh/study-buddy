@@ -140,8 +140,8 @@ export default function ProfileScreen() {
           />
         ) : (
           <Image
-            source={require("../../assets/images/doggo.png")}
-            style={{ width: 120, height: 120, borderRadius: 60 }}
+            source={require("../../assets/images/avatar.png")}
+            style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: "#FFFFFF" }}
           />
         )}
 

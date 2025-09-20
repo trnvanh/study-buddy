@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { useBuddy } from '../../context/buddy-context';
 import { Pet } from '../../types/pet';
 import { useRouter } from 'expo-router';
 import { API_BASE_URL } from '@/config/constants';
+
+import { BlurView } from 'expo-blur';
 
 const screenWidth = Dimensions.get('window').width;
 const circleSize = (screenWidth - 100) / 3;
@@ -12,8 +14,17 @@ export default function BuddyScreen() {
   const { selectedBuddy, setSelectedBuddy } = useBuddy();
   const router = useRouter();
 
-  const [buddies, setBuddies] = useState<Pet[]>([]);
+  const [unlockedBuddies, setUnlockedBuddies] = useState<Pet[]>([]);
+  const [lockedBuddies, setLockedBuddies] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleBuddyPress = (buddy) => {
+      if (!buddy.unlocked) {
+            Alert.alert('Locked Buddy', 'Collect more Pomodoro hours to unlock!', [{ text: 'OK' }]);
+      } else {
+            setSelectedBuddy(buddy);
+      }
+  };
 
   // Fetch from backend
   useEffect(() => {
@@ -25,7 +36,8 @@ export default function BuddyScreen() {
           const data = await res.json();
           const unlockedBuddies = data.filter((pet: Pet) => pet.unlocked);
           const lockedBuddies = data.filter((pet: Pet) => !pet.unlocked);
-          setBuddies(unlockedBuddies);
+          setUnlockedBuddies(unlockedBuddies);
+          setLockedBuddies(lockedBuddies);
           if (unlockedBuddies.length > 0) setSelectedBuddy(unlockedBuddies[0]);
         } else {
           console.log('Fetch error status:', res.status);
@@ -63,18 +75,31 @@ export default function BuddyScreen() {
         )}
 
         <View style={styles.buddyGrid}>
-          {buddies.map((buddy) => (
+          {unlockedBuddies.map((buddy) => (
             <TouchableOpacity
               key={buddy.id}
               style={[
                 styles.buddyCircle,
                 displayBuddy?.id === buddy.id && styles.selectedBorder,
               ]}
-              onPress={() => setSelectedBuddy(buddy)}
+              onPress={() => handleBuddyPress(buddy)}
             >
               <Image source={{ uri: buddy.imageUrl }} style={styles.buddyImage} />
             </TouchableOpacity>
           ))}
+            {lockedBuddies.map((buddy) => (
+                <TouchableOpacity
+                    key={buddy.id}
+                    style={[
+                        styles.buddyLockedCircle,
+                        displayBuddy?.id === buddy.id && styles.selectedBorder,
+                    ]}
+                    onPress={() => handleBuddyPress(buddy)}
+                >
+                    <Image source={{ uri: buddy.imageUrl }} style={styles.buddyLockedImage} />
+                    <BlurView intensity={50} style={styles.buddyLockedBlur} />
+                </TouchableOpacity>
+            ))}
         </View>
       </View>
 
@@ -131,11 +156,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     margin: 5,
   },
+  buddyLockedCircle: {
+      width: circleSize,
+      height: circleSize,
+      borderRadius: circleSize / 2,
+      backgroundColor: '#fff',
+      justifyContent: 'center',
+      alignItems: 'center',
+      margin: 5,
+      opacity: 0.6,
+      borderWidth: 2,
+      borderColor: '#ccc',
+  },
   buddyImage: {
     width: circleSize * 0.6,
     height: circleSize * 0.6,
     resizeMode: 'contain',
   },
+  buddyLockedImage: {
+      width: circleSize * 0.6,
+      height: circleSize * 0.6,
+      opacity: 0.5,
+      resizeMode: 'contain',
+      tintColor: '#aaa',
+  },
+  buddyLockedBlur : {position: 'absolute',
+                       width: '100%',
+                       height: '100%',
+                       borderRadius: circleSize / 2,
+                       opacity: 0.3,},
   selectedBorder: {
     borderWidth: 3,
     borderColor: '#f7b7c2',
