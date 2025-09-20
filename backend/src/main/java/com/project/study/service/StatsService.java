@@ -1,11 +1,12 @@
 package com.project.study.service;
 
-import com.project.study.dto.StatsResponseDto;
-import com.project.study.repository.PomodoroLogRepository;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import org.springframework.stereotype.Service;
+
+import com.project.study.dto.StatsResponseDto;
+import com.project.study.repository.PomodoroLogRepository;
 
 @Service
 public class StatsService {
@@ -52,7 +53,7 @@ public class StatsService {
         long monthly = repository.countBetween(startOfMonth, endOfMonth);
         long yearly = repository.countBetween(startOfYear, endOfYear);
         long lastWeek = repository.countBetween(startOfLastWeek, endOfLastWeek);
-        long totalMinutes = repository.sumAllDurations() != null ? repository.sumAllDurations() : 0;
+        long totalMinutes = repository.sumAllDurations();
         long totalHours = totalMinutes / 60;
 
         // Weekly trend Mon-Sun
