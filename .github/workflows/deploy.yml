@@ -28,7 +28,7 @@ jobs:
     - name: Build and push Docker image
       run: |
         IMAGE_TAG=latest
-        REPO_URI=<your-account-id>.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/anhtran/pomodoggo
+        REPO_URI=768871025936.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/anhtran/pomodoggo
         docker build -t $REPO_URI:$IMAGE_TAG ./backend
         docker push $REPO_URI:$IMAGE_TAG
 
