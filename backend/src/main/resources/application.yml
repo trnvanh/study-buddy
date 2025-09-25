@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://database-1.cx0iygoqyfre.eu-central-1.rds.amazonaws.com:5432/postgres
     username: postgres
-    password: g9T4ow$2*E7,72BZ;MCxiOE9qBOz!WK$
+    password: 2bN9Gb0vYuOWWdS1twtB
   web:
     resources:
       static-locations: classpath:/static/, file:uploads/
