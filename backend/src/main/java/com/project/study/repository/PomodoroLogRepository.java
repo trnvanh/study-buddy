@@ -18,11 +18,11 @@ public interface PomodoroLogRepository extends JpaRepository<PomodoroLogEntity, 
     //List<PomodoroLogEntity> findByPet_IdAndStartTimeBetween(Long petId, LocalDateTime start, LocalDateTime end);
 
     // Count time in a period (daily, weekly, monthly, etc)
-    @Query("SELECT COUNT(p) FROM pomodoro_log_entity p WHERE p.end_time >= :start AND p.end_time < :end")
+    @Query("SELECT COUNT(p) FROM PomodoroLogEntity p WHERE p.endTime >= :start AND p.endTime < :end")
     long countBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // Count total
-    @Query("SELECT SUM(p.duration_minutes) FROM pomodoro_log_entity p")
-    long sumAllDurations();
+    // Count total duration (uses entity field names)
+    @Query("SELECT SUM(p.durationMinutes) FROM PomodoroLogEntity p")
+    Long sumAllDurations();
 
 }
