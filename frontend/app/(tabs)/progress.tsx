@@ -113,7 +113,7 @@ export default function ProgressScreen() {
       </View>
 
       {/* Weekly comparison */}
-      <View style={styles.section}>
+      <View style={styles.cardWeeklyComparison}>
         <Text style={styles.subtitle}>Comparison vs Last Week</Text>
         <Text style={[styles.percentage, { color: weeklyChange >= 0 ? 'green' : 'red' }]}>
           {weeklyChange >= 0 ? '+' : ''}{weeklyChange}%
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     marginBottom: 20 
   },
   section: { 
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 10,
     alignItems: 'center', 
     width: '90%' 
@@ -230,8 +230,8 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: "#E1ACAC",
-    opacity: 0.75,
+    backgroundColor: "#FFFFFF",
+    opacity: 0.8,
     marginHorizontal: 10,
     padding: 16,
     height: 150,
@@ -241,6 +241,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  cardWeeklyComparison: {
+      flex: 1,
+      backgroundColor: "#FFFFFF",
+      opacity: 0.8,
+      marginVertical: 20,
+      padding: 16,
+      width: '90%',
+      height: 150,
+      borderRadius: 12,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
   },
   subtitle: {
     fontSize: 15,

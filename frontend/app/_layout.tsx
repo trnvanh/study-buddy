@@ -3,14 +3,15 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { BuddyProvider } from '../context/buddy-context';
+import { ThemeProviderWrapper, useAppTheme } from '../context/theme-context';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 import { Text, View } from 'react-native';
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function RootLayoutInner() {
+  const { theme } = useAppTheme();
 
   const [fontsLoaded] = useFonts({
     Jersey20: require('../assets/fonts/Jersey20-Regular.ttf'),
@@ -24,14 +25,22 @@ export default function RootLayout() {
 
   return (
     <BuddyProvider>
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="welcome" />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+      <ThemeProvider value={theme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="welcome" />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
     </BuddyProvider>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProviderWrapper>
+      <RootLayoutInner />
+    </ThemeProviderWrapper>
   );
 }

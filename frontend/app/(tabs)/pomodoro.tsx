@@ -315,7 +315,7 @@ const styles = StyleSheet.create({
       borderRadius: 10,
       alignItems: "center",
       marginTop: 20,
-      width: '50%',
+      width: '90%',
   },
   startText: {
     color: '#fff',

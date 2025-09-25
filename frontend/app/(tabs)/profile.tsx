@@ -5,6 +5,7 @@ import { API_BASE_URL } from "@/config/constants";
 import { Profile } from "@/types/profile";
 import * as ImagePicker from "expo-image-picker";
 import { Image, Alert } from "react-native";
+import { useAppTheme } from '@/context/theme-context';
 
 
 export default function ProfileScreen() {
@@ -119,6 +120,8 @@ export default function ProfileScreen() {
     }
   };
 
+  const { setTheme } = useAppTheme();
+
   if (loading || !profile) {
     return (
       <View style={styles.container}>
@@ -202,7 +205,7 @@ export default function ProfileScreen() {
 
       <Text>Long-Term Goal</Text>
       <TextInput
-        style={styles.input}
+        style={styles.inputLongTerm}
         value={profile.longTermGoal}
         onChangeText={(text) => setProfile({ ...profile, longTermGoal: text })}
       />
@@ -211,7 +214,15 @@ export default function ProfileScreen() {
         <Text>Dark Mode</Text>
         <Switch
           value={profile.darkMode}
-          onValueChange={(val) => setProfile({ ...profile, darkMode: val })}
+          onValueChange={async (val) => {
+            setProfile({ ...profile, darkMode: val });
+            // persist app theme immediately
+            try {
+              await setTheme(val ? 'dark' : 'light');
+            } catch (e) {
+              // ignore
+            }
+          }}
         />
       </View>
 
@@ -223,10 +234,38 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFD0D0", padding: 20, paddingTop: 60 },
-  title: { fontSize: 35, fontFamily: 'Jersey20', color: '#A87676', marginBottom: 10, paddingHorizontal: 135 },
-  input: { backgroundColor: "#fff", borderRadius: 8, padding: 10, marginBottom: 12 },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 },
+  container: {
+      flex: 1,
+      backgroundColor: "#FFD0D0",
+      padding: 20,
+      paddingTop: 60
+  },
+  title: {
+      fontSize: 35,
+      fontFamily: 'Jersey20',
+      color: '#A87676',
+      marginBottom: 10,
+      paddingHorizontal: 135
+  },
+  input: {
+      backgroundColor: "#fff",
+      borderRadius: 8,
+      padding: 10,
+      marginBottom: 12,
+  },
+  inputLongTerm: {
+      backgroundColor: "#fff",
+      borderRadius: 8,
+      padding: 10,
+      marginBottom: 12,
+      height: 100,
+  },
+  row: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 10,
+  },
   saveBtn: {
     backgroundColor: "#A87676",
     padding: 12,
