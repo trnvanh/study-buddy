@@ -14,12 +14,12 @@ public class PetEntity {
     private boolean isUnlocked;
     private String quote;
 
-    private long hoursToUnlock;
+    private Long hoursToUnlock;
 
     public PetEntity() {
     }
 
-    public PetEntity(String name, String imageUrl, boolean isUnlocked, String quote, long hoursToUnlock) {
+    public PetEntity(String name, String imageUrl, boolean isUnlocked, String quote, Long hoursToUnlock) {
         this.name = name;
         this.imageUrl = imageUrl;
         this.isUnlocked = isUnlocked;
@@ -43,7 +43,7 @@ public class PetEntity {
         return quote;
     }
 
-    public long getHoursToUnlock() {
+    public Long getHoursToUnlock() {
         return hoursToUnlock;
     }
 
@@ -71,7 +71,7 @@ public class PetEntity {
         isUnlocked = unlocked;
     }
 
-    public void setHoursToUnlock(long hoursToUnlock) {
+    public void setHoursToUnlock(Long hoursToUnlock) {
         this.hoursToUnlock = hoursToUnlock;
     }
 }
