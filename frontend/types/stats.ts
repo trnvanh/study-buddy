@@ -5,4 +5,5 @@ export type StatsResponse = {
   yearlyCount: number;
   lastWeekCount: number;
   weeklyTrend: number[];
+  totalHours?: number;
 };

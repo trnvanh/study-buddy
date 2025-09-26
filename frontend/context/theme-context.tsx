@@ -12,7 +12,7 @@ type ThemeContextType = {
 
 const STORAGE_KEY = 'preferredColorScheme';
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProviderWrapper = ({ children }: { children: ReactNode }) => {
   const system = (useSystemColorScheme() ?? 'light') as ThemeMode;

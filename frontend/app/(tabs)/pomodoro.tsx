@@ -1,26 +1,34 @@
-import { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { API_BASE_URL } from '@/config/constants';
 import { useFocusEffect } from "@react-navigation/native";
+import * as Application from 'expo-application';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
-import * as Application from 'expo-application';
-import { API_BASE_URL } from '@/config/constants';
+import { useEffect, useRef, useState } from 'react';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 import { AnimatedCircularProgress } from 'react-native-circular-progress';
 
-import { useBuddy } from '../../context/buddy-context';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { Profile } from '@/types/profile';
 import React from 'react';
+import { useBuddy } from '../../context/buddy-context';
 
 
 export default function PomodoroScreen() {
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState(null as Profile | null);
   const [mode, setMode] = useState<'studying' | 'short' | 'long'>('studying');
   const [timeLeft, setTimeLeft] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<number | null>(null);
 
   const { selectedBuddy, setSelectedBuddy, buddies } = useBuddy();
+
+  const bg = useThemeColor({}, 'background');
+  const card = useThemeColor({}, 'card');
+  const accent = useThemeColor({}, 'accent');
+  const button = useThemeColor({}, 'button');
+  const modeButton = useThemeColor({}, 'modeButton');
+  const modeButtonActive = useThemeColor({}, 'modeButtonActive');
 
   // On the first load when opening the app, set the first pet in the list as selected pet
   useEffect(() => {
@@ -161,7 +169,7 @@ export default function PomodoroScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: bg }]}>
         <View style={styles.content}>
       {/* Mode Buttons */}
       <View style={styles.modeRow}>
@@ -169,8 +177,7 @@ export default function PomodoroScreen() {
           <TouchableOpacity
             key={key}
             style={[
-              styles.modeButton,
-              mode === key && styles.modeButtonActive,
+              styles.modeButton, {backgroundColor: mode === key ? modeButtonActive : modeButton}
             ]}
             onPress={() => {
               setMode(key as 'studying' | 'short' | 'long');
@@ -183,19 +190,19 @@ export default function PomodoroScreen() {
       </View>
 
       {/* Quote box */}
-      <View style={styles.messageBox}>
+      <View style={[styles.messageBox, { backgroundColor: card}]}>
         <Text style={styles.messageText}>{selectedBuddy?.quote}</Text>
       </View>
 
 
       {/* Dog Image */}
 
-        <AnimatedCircularProgress
+  <AnimatedCircularProgress
         size={250}
         width={12}
         fill={progress}
-        tintColor="#FF8A8A"
-        backgroundColor="#FFE5E5"
+  tintColor={accent}
+  backgroundColor={card}
         duration={1000}
         >
         {() => (
@@ -210,7 +217,7 @@ export default function PomodoroScreen() {
       {/* Timer Display */}
       <View style={styles.timerBox}>
         {formatTime(timeLeft).split('').map((char, idx) => (
-          <View key={idx} style={styles.timerDigit}>
+          <View key={idx} style={[styles.timerDigit, { backgroundColor: card }]}>
             <Text style={styles.timerText}>{char}</Text>
           </View>
         ))}
@@ -219,7 +226,7 @@ export default function PomodoroScreen() {
 
       {/* Start / Pause */}
       <TouchableOpacity
-        style={styles.startButton}
+        style={[styles.startButton, { backgroundColor: button }]}
         onPress={() => setIsRunning((prev) => !prev)}
       >
         <Text style={styles.startText}>{isRunning ? 'Pause' : 'Start'}</Text>
@@ -310,7 +317,7 @@ const styles = StyleSheet.create({
   },
 
   startButton: {
-      backgroundColor: "#A87676",
+    backgroundColor: "#A87676",
       padding: 12,
       borderRadius: 10,
       alignItems: "center",

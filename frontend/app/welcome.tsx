@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { View, Image, StyleSheet } from 'react-native';
+
 import { useRouter } from 'expo-router';
 
 export default function WelcomeScreen() {
@@ -14,7 +15,7 @@ export default function WelcomeScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container }>
       <Image
         source={require('../assets/images/welcome.png')}
         style={styles.logo}

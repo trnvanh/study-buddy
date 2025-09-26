@@ -1,21 +1,32 @@
-import { useState, useEffect } from 'react';
-import {
-  View, Text, StyleSheet, TextInput, TouchableOpacity,
-  FlatList, Modal, Alert
-} from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { API_BASE_URL } from '@/config/constants';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { Task } from '@/types/task';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useEffect, useState } from 'react';
+import {
+  Alert,
+  FlatList, Modal,
+  StyleSheet,
+  Text,
+  TextInput, TouchableOpacity,
+  View
+} from 'react-native';
 
 export default function SchedulingScreen() {
   const [tasks, setTasks] = useState<{ [day: string]: Task[] }>({});
   const [modalVisible, setModalVisible] = useState(false);
   const [newTask, setNewTask] = useState({ title: '', duration: 0 });
-  const [taskTime, setTaskTime] = useState<Date | null>(null);
+  const [taskTime, setTaskTime] = useState(null as Date | null);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState(null as Task | null);
+
+  // Theme colors (call hooks unconditionally to follow Rules of Hooks)
+  const bg = useThemeColor({}, 'background');
+  const card = useThemeColor({}, 'card');
+  const accent = useThemeColor({}, 'accent');
+  const text = useThemeColor({}, 'text');
 
   // Fetch tasks
   useEffect(() => {
@@ -192,8 +203,8 @@ export default function SchedulingScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Scheduling</Text>
+    <View style={[styles.container, { backgroundColor: bg }]}> 
+      <Text style={[styles.title, { color: text }]}>Scheduling</Text>
 
       {tasks && Object.keys(tasks).length > 0? (
         <FlatList
@@ -226,8 +237,8 @@ export default function SchedulingScreen() {
 
       {/* Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
+        <View style={[styles.modalOverlay, { backgroundColor: '#00000088' }]}>
+          <View style={[styles.modalBox, { backgroundColor: card }] }>
             <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>
               Add New Schedule
             </Text>
@@ -237,14 +248,11 @@ export default function SchedulingScreen() {
               placeholder="Task Title"
               value={newTask.title}
               onChangeText={text => setNewTask({ ...newTask, title: text })}
-              style={styles.input}
+              style={[styles.input, { backgroundColor: card }]}
             />
 
             {/* Time */}
-            <TouchableOpacity
-              style={[styles.input, { justifyContent: 'center' }]}
-              onPress={() => setShowTimePicker(true)}
-            >
+            <TouchableOpacity style={[styles.input, { justifyContent: 'center', backgroundColor: card }]} onPress={() => setShowTimePicker(true)}>
               <Text style={{ color: taskTime ? '#000' : '#999' }}>
                 {taskTime
                   ? taskTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -272,11 +280,11 @@ export default function SchedulingScreen() {
               onChangeText={text =>
                 setNewTask({ ...newTask, duration: Number(text) || 0 })
               }
-              style={styles.input}
+              style={[styles.input, { backgroundColor: card }]}
             />
 
             {/* Save */}
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSaveTask}>
+            <TouchableOpacity style={[styles.saveBtn, { backgroundColor: accent }]} onPress={handleSaveTask}>
               <Text style={{ color: '#fff', fontWeight: 'bold' }}>{editingTask ? 'Update Task' : 'Save Schedule'}</Text>
             </TouchableOpacity>
 

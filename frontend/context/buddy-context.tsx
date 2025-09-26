@@ -1,8 +1,8 @@
 // context/buddy-context.tsx
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Pet } from '../types/pet';
 import { API_BASE_URL } from '@/config/constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { Pet } from '../types/pet';
 
 type BuddyContextType = {
   buddies: Pet[];
@@ -16,7 +16,7 @@ const BuddyContext = createContext<BuddyContextType | undefined>(undefined);
 
 export const BuddyProvider = ({ children }: { children: ReactNode }) => {
   const [buddies, setBuddies] = useState<Pet[]>([]);
-  const [selectedBuddy, setSelectedBuddy] = useState<Pet | null>(null);
+  const [selectedBuddy, setSelectedBuddy] = useState(null as Pet | null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

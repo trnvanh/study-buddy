@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
-import { View, Text, Switch, TextInput, TouchableOpacity, StyleSheet, Platform } from "react-native";
-import * as Application from "expo-application";
 import { API_BASE_URL } from "@/config/constants";
-import { Profile } from "@/types/profile";
-import * as ImagePicker from "expo-image-picker";
-import { Image, Alert } from "react-native";
 import { useAppTheme } from '@/context/theme-context';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { Profile } from "@/types/profile";
+import * as Application from "expo-application";
+import * as ImagePicker from "expo-image-picker";
+import { useEffect, useState } from "react";
+import { Alert, Image, Platform, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 
 export default function ProfileScreen() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [avatar, setAvatar] = useState<string | null>(null);
+  const [profile, setProfile] = useState(null as Profile | null);
+  const [avatar, setAvatar] = useState(null as string | null);
   const [loading, setLoading] = useState(true);
 
   // Load profile on mount
@@ -121,18 +121,22 @@ export default function ProfileScreen() {
   };
 
   const { setTheme } = useAppTheme();
+  const containerBg = useThemeColor({}, 'background');
+  const cardBg = useThemeColor({}, 'card');
+  const inputBg = useThemeColor({}, 'card');
+  const titleColor = useThemeColor({}, 'tint');
 
   if (loading || !profile) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: containerBg }]}>
         <Text>Loading profile...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Profile</Text>
+    <View style={[styles.container, { backgroundColor: containerBg }]}> 
+      <Text style={[styles.title, { color: titleColor }]}>Profile</Text>
 
       <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
         {/* Avatar */}
@@ -142,9 +146,9 @@ export default function ProfileScreen() {
             style={{ width: 120, height: 120, borderRadius: 60 }}
           />
         ) : (
-          <Image
+            <Image
             source={require("../../assets/images/avatar.png")}
-            style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: "#FFFFFF" }}
+            style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: cardBg }}
           />
         )}
 
@@ -154,8 +158,8 @@ export default function ProfileScreen() {
             flex: 1, 
             marginLeft: 16,
             padding: 10,
-            backgroundColor: "#FFE5E5",
-            borderRadius: 8,
+            backgroundColor: cardBg,
+            borderRadius: 10,
           }}
         >
           <Text style={{ fontWeight: "bold", marginBottom: 4 }}>Short-Term Goal</Text>
@@ -167,9 +171,9 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      <TouchableOpacity onPress={pickAvatar} style={{ marginBottom: 20 }}>
-          <Text style={{ color: "#A87676", fontWeight: "bold" }}>Change Avatar</Text>
-      </TouchableOpacity>
+    <TouchableOpacity onPress={pickAvatar} style={{ marginBottom: 20 }}>
+      <Text style={{ color: titleColor, fontWeight: "bold" }}>Change Avatar</Text>
+    </TouchableOpacity>
 
       <Text>Pomodoro Minutes</Text>
       <TextInput
@@ -226,7 +230,7 @@ export default function ProfileScreen() {
         />
       </View>
 
-      <TouchableOpacity style={styles.saveBtn} onPress={saveProfile}>
+      <TouchableOpacity style={[styles.saveBtn, { backgroundColor: titleColor }]} onPress={saveProfile}>
         <Text style={{ color: "#fff", fontWeight: "bold" }}>Save Profile</Text>
       </TouchableOpacity>
     </View>

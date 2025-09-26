@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ActivityIndicator, Alert } from 'react-native';
 import { useBuddy } from '../../context/buddy-context';
 import { Pet } from '../../types/pet';
@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import { API_BASE_URL } from '@/config/constants';
 
 import { BlurView } from 'expo-blur';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 const screenWidth = Dimensions.get('window').width;
 const circleSize = (screenWidth - 100) / 3;
@@ -18,12 +19,12 @@ export default function BuddyScreen() {
   const [lockedBuddies, setLockedBuddies] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const handleBuddyPress = (buddy) => {
-      if (!buddy.unlocked) {
-            Alert.alert('Locked Buddy', 'Collect more Pomodoro hours to unlock!', [{ text: 'OK' }]);
-      } else {
-            setSelectedBuddy(buddy);
-      }
+  const handleBuddyPress = (buddy: Pet) => {
+    if (!buddy.unlocked) {
+      Alert.alert('Locked Buddy', 'Collect more Pomodoro hours to unlock!', [{ text: 'OK' }]);
+    } else {
+      setSelectedBuddy(buddy);
+    }
   };
 
   // Fetch from backend
@@ -54,21 +55,25 @@ export default function BuddyScreen() {
 
   const displayBuddy = selectedBuddy;
 
+  const bg = useThemeColor({}, 'background');
+  const card = useThemeColor({}, 'card');
+  const tint = useThemeColor({}, 'tint');
+
   if (loading) {
     return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#A87676" />
+      <View style={[styles.container, { backgroundColor: bg }]}> 
+        <ActivityIndicator size="large" color={tint} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: bg }]}> 
       <View style={styles.content}>
-        <Text style={styles.title}>Choose your buddy</Text>
+        <Text style={[styles.title, { color: tint }]}>Choose your buddy</Text>
 
         {displayBuddy && (
-          <View style={styles.bigCircle}>
+          <View style={[styles.bigCircle, { backgroundColor: card }] }>
             <Image source={{ uri: displayBuddy.imageUrl }} style={styles.bigImage} />
             <Text style={styles.buddyName}>{displayBuddy.name}</Text>
           </View>
@@ -76,7 +81,7 @@ export default function BuddyScreen() {
 
         <View style={styles.buddyGrid}>
           {unlockedBuddies.map((buddy) => (
-            <TouchableOpacity
+              <TouchableOpacity
               key={buddy.id}
               style={[
                 styles.buddyCircle,
@@ -102,7 +107,7 @@ export default function BuddyScreen() {
             ))}
         </View>
       </View>
-
+    
     </View>
   );
 }
